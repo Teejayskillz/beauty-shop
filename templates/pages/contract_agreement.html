@@ -250,6 +250,52 @@
             font-size: 0.9rem;
         }
     }
+
+    /* Payment Methods Checkbox Styling */
+    .payment-methods-group {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .payment-methods-group div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.8rem 1.5rem;
+        background: var(--white);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1.5px solid #e0d5cf;
+    }
+
+    .payment-methods-group div:hover {
+        background: var(--cream);
+        border-color: var(--dusty-rose);
+        transform: translateY(-2px);
+    }
+
+    .payment-methods-group input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: var(--deep-mauve);
+        margin: 0;
+    }
+
+    .payment-methods-group label {
+        cursor: pointer;
+        margin: 0;
+        font-weight: 500;
+        color: var(--soft-brown);
+    }
+
+    /* Make the entire payment method box clickable */
+    .payment-methods-group div {
+        cursor: pointer;
+    }
 </style>
 {% endblock %}
 
@@ -349,7 +395,7 @@
             </div>
         </div>
 
-        <!-- Contract Details -->
+        <!-- Contract Details Section - REPLACE the entire Contract Details section -->
         <div class="form-section">
             <h2>Contract Details</h2>
             <div class="form-row">
@@ -360,23 +406,28 @@
                         <span class="calendar-icon">📅</span>
                     </div>
                     <div id="selectedMonthDisplay" class="selected-month-display"></div>
-                    {% if form.contract_duration.help_text %}
-                    <span class="help-text">{{ form.contract_duration.help_text }}</span>
-                    {% endif %}
                     {% if form.contract_duration.errors %}
                     <ul class="errorlist">{{ form.contract_duration.errors }}</ul>
                     {% endif %}
                 </div>
-                <div class="form-group">
-                    <label class="required-field">Payment Method</label>
-                    {{ form.payment_method }}
-                </div>
             </div>
 
-            <div class="form-group" id="bankNameField" style="display: none;">
+            <!-- Payment Methods - Checkboxes -->
+            <div class="form-group">
+                <label class="required-field">Payment Method (Select all that apply)</label>
+                <div class="payment-methods-group">
+                    {{ form.payment_methods }}
+                </div>
+                {% if form.payment_methods.errors %}
+                <ul class="errorlist">{{ form.payment_methods.errors }}</ul>
+                {% endif %}
+            </div>
+
+            <!-- Bank Name Field - Always visible -->
+            <div class="form-group" id="bankNameField">
                 <label>Bank Name (Local bank or Credit Union only)</label>
                 {{ form.bank_name }}
-                <span class="help-text">Required for E-check payment</span>
+                <span class="help-text">Please provide your bank details</span>
                 {% if form.bank_name.errors %}
                 <ul class="errorlist">{{ form.bank_name.errors }}</ul>
                 {% endif %}
@@ -420,23 +471,6 @@
 </div>
 
 <script>
-    // Toggle bank name field based on payment method
-    const paymentMethodField = document.querySelector('#id_payment_method');
-    const bankNameField = document.querySelector('#bankNameField');
-
-    function toggleBankNameField() {
-        if (paymentMethodField && paymentMethodField.value === 'echeck') {
-            bankNameField.style.display = 'block';
-        } else if (bankNameField) {
-            bankNameField.style.display = 'none';
-        }
-    }
-
-    if (paymentMethodField) {
-        toggleBankNameField();
-        paymentMethodField.addEventListener('change', toggleBankNameField);
-    }
-
     // Clear signature field
     function clearSignature() {
         const signatureField = document.querySelector('#id_signature');
@@ -528,6 +562,42 @@
         checkbox.addEventListener('click', function (e) {
             e.stopPropagation(); // Prevent double toggling
         });
+    });
+
+    // Make payment method boxes clickable
+    document.querySelectorAll('.payment-methods-group div').forEach(box => {
+        const checkbox = box.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+            box.addEventListener('click', function (e) {
+                // Don't trigger if clicking directly on the checkbox
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    checkbox.dispatchEvent(event);
+
+                    // Update box styling
+                    if (checkbox.checked) {
+                        box.style.background = 'var(--cream)';
+                        box.style.borderColor = 'var(--deep-mauve)';
+                    } else {
+                        box.style.background = 'var(--white)';
+                        box.style.borderColor = '#e0d5cf';
+                    }
+                }
+            });
+
+            // Style based on checked state
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    box.style.background = 'var(--cream)';
+                    box.style.borderColor = 'var(--deep-mauve)';
+                } else {
+                    box.style.background = 'var(--white)';
+                    box.style.borderColor = '#e0d5cf';
+                }
+            });
+        }
     });
 </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 # pages/forms.py
 from django import forms
-from .models import ContractAgreement
+from .models import ContractAgreement, PaymentMethod
 
 class ContractAgreementForm(forms.ModelForm):
     contract_duration = forms.DateField(
@@ -12,12 +12,20 @@ class ContractAgreementForm(forms.ModelForm):
         help_text="Select contract duration"
     )
     
+    # Override payment_methods to use checkboxes
+    payment_methods = forms.ModelMultipleChoiceField(
+        queryset=PaymentMethod.objects.all(),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'payment-checkbox-group'}),
+        required=False,
+        label="Payment Method"
+    )
+    
     class Meta:
         model = ContractAgreement
         fields = [
             'first_name', 'last_name', 'email', 'phone',
             'street_address', 'address_line2', 'city', 'state_region', 
-            'postal_code', 'country', 'contract_duration', 'payment_method',
+            'postal_code', 'country', 'contract_duration', 'payment_methods',
             'bank_name', 'agree_to_promote', 'agree_to_post_twice', 'signature'
         ]
         widgets = {
@@ -28,22 +36,17 @@ class ContractAgreementForm(forms.ModelForm):
     def clean_contract_duration(self):
         contract_duration = self.cleaned_data.get('contract_duration')
         if contract_duration:
-            # If it's a string in YYYY-MM format, convert to date
             if isinstance(contract_duration, str):
                 from datetime import datetime
                 try:
-                    # Parse the month string and set to first day of month
                     contract_duration = datetime.strptime(contract_duration, '%Y-%m').date()
                 except ValueError:
                     raise forms.ValidationError('Please select a valid month and year.')
         return contract_duration
     
-    def clean(self):
-        cleaned_data = super().clean()
-        payment_method = cleaned_data.get('payment_method')
-        bank_name = cleaned_data.get('bank_name')
-        
-        if payment_method == 'echeck' and not bank_name:
-            self.add_error('bank_name', 'Bank name is required for E-check payment')
-        
-        return cleaned_data
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Create default payment methods if none exist
+        if PaymentMethod.objects.count() == 0:
+            PaymentMethod.objects.create(name='E-check', code='echeck')
+            PaymentMethod.objects.create(name='Credit card', code='credit_card')

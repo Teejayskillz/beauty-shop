@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import ContractAgreementForm
 from .models import ContractAgreement
+from datetime import datetime
 
 
 def home_view(request):
@@ -54,6 +55,8 @@ def contract_agreement_view(request):
                 contract.ip_address = request.META.get('REMOTE_ADDR')
             
             contract.save()
+            form.save_m2m()  # Important: Save the ManyToMany relationships (payment_methods)
+            
             messages.success(request, 'Your contract agreement has been submitted successfully!')
             return redirect('contract_success')
     else:
