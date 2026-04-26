@@ -397,7 +397,7 @@
 
             <div class="checkbox-group" onclick="toggleCheckbox('id_agree_to_post_twice')">
                 <input type="checkbox" name="agree_to_post_twice" id="id_agree_to_post_twice">
-                <label for="id_agree_to_post_twice">I agree to post and promote this every week</label>
+                <label for="id_agree_to_post_twice">I agree to post and promote this brand every week</label>
             </div>
         </div>
 
@@ -445,7 +445,7 @@
         }
     }
 
-    // Month picker functionality
+    // Month picker functionality - FIXED VERSION
     const monthInput = document.querySelector('#id_contract_duration');
     const selectedMonthDisplay = document.querySelector('#selectedMonthDisplay');
 
@@ -461,8 +461,34 @@
 
         // For browsers that support showPicker()
         if (monthInput.showPicker) {
-            monthInput.addEventListener('click', function () {
+            monthInput.addEventListener('click', function (e) {
+                e.preventDefault();
                 this.showPicker();
+            });
+        }
+
+        // Convert month value to date format for form submission
+        function convertMonthToDate(monthValue) {
+            if (monthValue && monthValue.match(/^\d{4}-\d{2}$/)) {
+                // Convert YYYY-MM to YYYY-MM-01 (first day of month)
+                return monthValue + '-01';
+            }
+            return monthValue;
+        }
+
+        // Handle form submission to convert month to date
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (monthInput.value && monthInput.value.match(/^\d{4}-\d{2}$/)) {
+                    // Convert to YYYY-MM-01 format before submission
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'contract_duration';
+                    hiddenInput.value = convertMonthToDate(monthInput.value);
+                    monthInput.name = 'contract_duration_display';
+                    form.appendChild(hiddenInput);
+                }
             });
         }
 
