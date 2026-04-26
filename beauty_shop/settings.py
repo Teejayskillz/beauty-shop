@@ -25,7 +25,12 @@ SECRET_KEY = 'django-insecure-bt-uo%^z&_bg83dw@^+nt^2ajt9kpd91g1($79i9j@p35-(n-2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'velourabeautyco.shop',
+    'www.velourabeautyco.shop',
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
