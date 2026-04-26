@@ -2,10 +2,14 @@ from shop.models import Product
 import random
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 from .forms import ContractAgreementForm
 from .models import ContractAgreement
 from datetime import datetime
-
+from .email_utils import send_contract_notification
 
 def home_view(request):
     # Get all products and shuffle them randomly
@@ -40,7 +44,6 @@ def agreement_view(request):
 def agreements_view(request):
     return render(request, "pages/agreements.html")
 
-
 def contract_agreement_view(request):
     if request.method == 'POST':
         form = ContractAgreementForm(request.POST)
@@ -55,7 +58,10 @@ def contract_agreement_view(request):
                 contract.ip_address = request.META.get('REMOTE_ADDR')
             
             contract.save()
-            form.save_m2m()  # Important: Save the ManyToMany relationships (payment_methods)
+            form.save_m2m()  # Save payment_methods ManyToMany
+            
+            # Send email notification
+            send_contract_notification(contract)
             
             messages.success(request, 'Your contract agreement has been submitted successfully!')
             return redirect('contract_success')

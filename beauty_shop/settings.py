@@ -10,6 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -131,3 +136,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Email Configuration for Custom Domain (cPanel)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'mail.velourabeautyco.shop'  # Your cPanel mail server
+EMAIL_PORT = 465  # Use 465 for SSL
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True  # Required for port 465
+EMAIL_HOST_USER = 'samantha@velourabeautyco.shop'
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Your actual email password
+DEFAULT_FROM_EMAIL = f'Veloura Beauty <{EMAIL_HOST_USER}>'
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')

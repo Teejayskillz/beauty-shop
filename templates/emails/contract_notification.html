@@ -1,0 +1,206 @@
+<!-- templates/emails/contract_notification.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>New Contract Agreement</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #8B4F5E, #6B4C3B);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B4F5E;
+            margin-bottom: 15px;
+            border-left: 3px solid #C9897A;
+            padding-left: 10px;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .info-label {
+            width: 130px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .payment-methods {
+            display: inline-block;
+            background: #f0e8e3;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+        }
+
+        .footer {
+            background: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #8B4F5E;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✨ New Contract Agreement</h1>
+            <p style="margin-top: 10px;">A new agreement has been submitted</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-title">Personal Information</div>
+                <div class="info-row">
+                    <div class="info-label">Full Name:</div>
+                    <div class="info-value">{{ contract.full_name }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Email:</div>
+                    <div class="info-value">{{ contract.email }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Phone:</div>
+                    <div class="info-value">{{ contract.phone }}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Address Information</div>
+                <div class="info-row">
+                    <div class="info-label">Street:</div>
+                    <div class="info-value">{{ contract.street_address }}</div>
+                </div>
+                {% if contract.address_line2 %}
+                <div class="info-row">
+                    <div class="info-label">Address Line 2:</div>
+                    <div class="info-value">{{ contract.address_line2 }}</div>
+                </div>
+                {% endif %}
+                <div class="info-row">
+                    <div class="info-label">City:</div>
+                    <div class="info-value">{{ contract.city }}, {{ contract.state_region }} {{ contract.postal_code }}
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Country:</div>
+                    <div class="info-value">{{ contract.country }}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Contract Details</div>
+                <div class="info-row">
+                    <div class="info-label">Contract Start:</div>
+                    <div class="info-value">{{ contract.contract_duration|date:"F Y" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Payment Methods:</div>
+                    <div class="info-value">
+                        {% for method in contract.payment_methods.all %}
+                        <span class="payment-methods">✓ {{ method.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if contract.bank_name %}
+                <div class="info-row">
+                    <div class="info-label">Bank Name:</div>
+                    <div class="info-value">{{ contract.bank_name }}</div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="section">
+                <div class="section-title">Agreement Terms</div>
+                <div class="info-row">
+                    <div class="info-label">Post & Promote:</div>
+                    <div class="info-value">✓ {{ contract.agree_to_promote|yesno:"Agreed,Not agreed" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Post Twice Weekly:</div>
+                    <div class="info-value">✓ {{ contract.agree_to_post_twice|yesno:"Agreed,Not agreed" }}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Signature</div>
+                <div class="info-row">
+                    <div class="info-label">Signed by:</div>
+                    <div class="info-value">{{ contract.signature }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Date:</div>
+                    <div class="info-value">{{ contract.created_at|date:"F j, Y g:i A" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">IP Address:</div>
+                    <div class="info-value">{{ contract.ip_address }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Veloura Beauty - Contract Agreement Notification</p>
+            <p>This is an automated message. Please do not reply.</p>
+        </div>
+    </div>
+</body>
+
+</html>
