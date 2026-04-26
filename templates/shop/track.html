@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Track Order - Veloura Beauty{% endblock %}
+
+{% block extra_css %}
+<style>
+    .track-container {
+        max-width: 680px;
+        margin: 120px auto 4rem;
+        padding: 0 2rem;
+    }
+
+    .track-card {
+        background: var(--white);
+        border-radius: 14px;
+        padding: 3rem 2.5rem;
+        border: 1px solid rgba(201, 137, 122, 0.12);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        text-align: center;
+    }
+
+    .track-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: var(--charcoal);
+        margin-bottom: 0.5rem;
+    }
+
+    .track-subtitle {
+        color: #7a6b65;
+        margin-bottom: 2.2rem;
+        font-size: 0.95rem;
+    }
+
+    .track-form {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .track-input {
+        flex: 1;
+        min-width: 260px;
+        padding: 1rem 1.1rem;
+        border-radius: 10px;
+        border: 1.5px solid #e0d5cf;
+        font-size: 0.95rem;
+        transition: 0.25s ease;
+    }
+
+    .track-input:focus {
+        outline: none;
+        border-color: var(--dusty-rose);
+    }
+
+    .track-btn {
+        padding: 1rem 1.8rem;
+        background: var(--deep-mauve);
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: 0.25s ease;
+        white-space: nowrap;
+    }
+
+    .track-btn:hover {
+        background: var(--soft-brown);
+        transform: translateY(-2px);
+    }
+
+    .result-box {
+        margin-top: 2.2rem;
+        text-align: left;
+    }
+
+    /* STATUS CARD */
+    .status-card {
+        background: var(--white);
+        border: 1px solid rgba(201, 137, 122, 0.15);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .status-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .status-header svg {
+        width: 18px;
+        height: 18px;
+        color: var(--deep-mauve);
+    }
+
+    .status-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        color: var(--charcoal);
+        margin: 0;
+    }
+
+    .status-text {
+        font-size: 1.05rem;
+        color: var(--deep-mauve);
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .tracking-code {
+        font-size: 0.9rem;
+        color: #7a6b65;
+        margin-bottom: 1rem;
+    }
+
+    .tracking-code strong {
+        color: var(--charcoal);
+        letter-spacing: 1px;
+    }
+
+    .track-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-top: 1rem;
+        color: var(--deep-mauve);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .track-link:hover {
+        text-decoration: underline;
+    }
+
+    .error-text {
+        color: #c0392b;
+        font-size: 0.95rem;
+    }
+
+    .loading-text {
+        color: #7a6b65;
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 600px) {
+        .track-card {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="track-container">
+    <div class="track-card">
+
+        <h1 class="track-title">Track Your Order</h1>
+        <p class="track-subtitle">
+            Enter your tracking code to view the latest status of your order
+        </p>
+
+        <form id="trackForm" class="track-form">
+            <input type="text" id="trackingCode" class="track-input" placeholder="Enter tracking code (e.g. VB-12345)"
+                required>
+            <button type="submit" class="track-btn">
+                Track Order
+            </button>
+        </form>
+
+        <div id="result" class="result-box"></div>
+
+    </div>
+</div>
+
+<script>
+    document.getElementById('trackForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const code = document.getElementById('trackingCode').value.trim();
+        const resultDiv = document.getElementById('result');
+
+        if (!code) {
+            resultDiv.innerHTML = `<p class="error-text">Enter a valid tracking code.</p>`;
+            return;
+        }
+
+        resultDiv.innerHTML = `<p class="loading-text">Retrieving order information...</p>`;
+
+        try {
+            const response = await fetch(`/shop/track/api/?code=${code}`);
+            const data = await response.json();
+
+            if (data.error) {
+                resultDiv.innerHTML = `
+                <p class="error-text">
+                    We could not find an order with this tracking code.
+                </p>
+            `;
+                return;
+            }
+
+            const statusMap = {
+                pending: 'Your order has been received and is awaiting processing.',
+                processing: 'Your order is currently being prepared.',
+                shipped: 'Your order is on its way to you.',
+                delivered: 'Your order has been successfully delivered.'
+            };
+
+            const statusIcons = {
+                pending: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 6v6l4 2"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+            `,
+                processing: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 2v4"/>
+                    <path d="M12 18v4"/>
+                    <path d="M4.93 4.93l2.83 2.83"/>
+                    <path d="M16.24 16.24l2.83 2.83"/>
+                </svg>
+            `,
+                shipped: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M3 12h18"/>
+                    <path d="M17 6l6 6-6 6"/>
+                </svg>
+            `,
+                delivered: `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 6L9 17l-5-5"/>
+                </svg>
+            `
+            };
+
+            resultDiv.innerHTML = `
+            <div class="status-card">
+
+                <div class="status-header">
+                    ${statusIcons[data.status] || ''}
+                    <h3 class="status-title">Order Status</h3>
+                </div>
+
+                <p class="status-text">
+                    ${statusMap[data.status] || data.status}
+                </p>
+
+                <p class="tracking-code">
+                    Tracking Code: <strong>${code}</strong>
+                </p>
+
+                <a class="track-link" href="/shop/order/tracking/${code}/">
+                    View full order details →
+                </a>
+
+            </div>
+        `;
+
+        } catch (error) {
+            resultDiv.innerHTML = `
+            <p class="error-text">
+                Unable to retrieve order at the moment. Please try again.
+            </p>
+        `;
+        }
+    });
+</script>
+{% endblock %}

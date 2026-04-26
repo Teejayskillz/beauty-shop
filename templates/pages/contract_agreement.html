@@ -1,0 +1,507 @@
+<!-- templates/pages/contract_agreement.html -->
+{% extends 'base.html' %}
+
+{% block title %}Contract Agreement - Veloura Beauty{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contract-container {
+        max-width: 900px;
+        margin: 120px auto 4rem;
+        padding: 2rem;
+        background: var(--white);
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .contract-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--blush);
+    }
+
+    .contract-header h1 {
+        font-family: 'Playfair Display', serif;
+        color: var(--deep-mauve);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--cream);
+        border-radius: 8px;
+    }
+
+    .form-section h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.3rem;
+        color: var(--deep-mauve);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--dusty-rose);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--soft-brown);
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1.5px solid #e0d5cf;
+        border-radius: 8px;
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    /* Month picker styling */
+    .form-group input[type="month"] {
+        position: relative;
+        cursor: pointer;
+        background: var(--white);
+        letter-spacing: 0.5px;
+    }
+
+    /* Make the entire input clickable */
+    .form-group input[type="month"]::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        opacity: 0;
+        background: transparent;
+    }
+
+    .form-group input[type="month"]:hover {
+        border-color: var(--dusty-rose);
+        background: var(--ivory);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--dusty-rose);
+    }
+
+    /* Checkbox styling - Improved */
+    .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: var(--white);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1.5px solid transparent;
+    }
+
+    .checkbox-group:hover {
+        background: var(--cream);
+        border-color: var(--dusty-rose);
+        transform: translateX(5px);
+    }
+
+    .checkbox-group input {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        margin: 0;
+        flex-shrink: 0;
+        accent-color: var(--deep-mauve);
+    }
+
+    .checkbox-group label {
+        margin: 0;
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1.4;
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .checkbox-group label.required-field::after {
+        content: " *";
+        color: red;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+
+    .errorlist {
+        color: red;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .help-text {
+        font-size: 0.8rem;
+        color: #7a6b65;
+        margin-top: 0.3rem;
+        display: block;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--deep-mauve);
+        color: white;
+        border: none;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        border-radius: 30px;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .submit-btn:hover {
+        background: var(--soft-brown);
+        transform: translateY(-2px);
+    }
+
+    .clear-signature {
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f0f0f0;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    .clear-signature:hover {
+        background: #e0e0e0;
+    }
+
+    /* Custom month picker wrapper */
+    .custom-date-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .calendar-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: var(--dusty-rose);
+        font-size: 1.2rem;
+    }
+
+    /* Display the selected month nicely */
+    .selected-month-display {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--deep-mauve);
+        display: none;
+        font-weight: 500;
+    }
+
+    .selected-month-display.show {
+        display: block;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .contract-container {
+            margin: 100px 1rem 2rem;
+            padding: 1rem;
+        }
+
+        .checkbox-group {
+            padding: 0.8rem;
+        }
+
+        .checkbox-group label {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contract-container">
+    <div class="contract-header">
+        <h1>Contract Agreement</h1>
+        <p>Please fill out this form to agree to our brand promotion terms</p>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success"
+        style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- Personal Information -->
+        <div class="form-section">
+            <h2>Personal Information</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                    <ul class="errorlist">{{ form.first_name.errors }}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                    <ul class="errorlist">{{ form.last_name.errors }}</ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <ul class="errorlist">{{ form.email.errors }}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Phone</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                    <ul class="errorlist">{{ form.phone.errors }}</ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Address Information -->
+        <div class="form-section">
+            <h2>Address Information</h2>
+            <div class="form-group">
+                <label class="required-field">Street Address</label>
+                {{ form.street_address }}
+                {% if form.street_address.errors %}
+                <ul class="errorlist">{{ form.street_address.errors }}</ul>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label>Address Line 2 (Optional)</label>
+                {{ form.address_line2 }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field">City</label>
+                    {{ form.city }}
+                </div>
+                <div class="form-group">
+                    <label class="required-field">State/Region</label>
+                    {{ form.state_region }}
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field">Postal Code</label>
+                    {{ form.postal_code }}
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Country</label>
+                    {{ form.country }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Details -->
+        <div class="form-section">
+            <h2>Contract Details</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field">Contract Start Month</label>
+                    <div class="custom-date-wrapper">
+                        {{ form.contract_duration }}
+                        <span class="calendar-icon">📅</span>
+                    </div>
+                    <div id="selectedMonthDisplay" class="selected-month-display"></div>
+                    {% if form.contract_duration.help_text %}
+                    <span class="help-text">{{ form.contract_duration.help_text }}</span>
+                    {% endif %}
+                    {% if form.contract_duration.errors %}
+                    <ul class="errorlist">{{ form.contract_duration.errors }}</ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="required-field">Payment Method</label>
+                    {{ form.payment_method }}
+                </div>
+            </div>
+
+            <div class="form-group" id="bankNameField" style="display: none;">
+                <label>Bank Name (Local bank or Credit Union only)</label>
+                {{ form.bank_name }}
+                <span class="help-text">Required for E-check payment</span>
+                {% if form.bank_name.errors %}
+                <ul class="errorlist">{{ form.bank_name.errors }}</ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Agreement Terms - IMPROVED VERSION -->
+        <div class="form-section">
+            <h2>Agreement Terms</h2>
+
+            <div class="checkbox-group" onclick="toggleCheckbox('id_agree_to_promote')">
+                <input type="checkbox" name="agree_to_promote" id="id_agree_to_promote" required>
+                <label for="id_agree_to_promote" class="required-field">I agree to post and promote this brand</label>
+            </div>
+            {% if form.agree_to_promote.errors %}
+            <ul class="errorlist">{{ form.agree_to_promote.errors }}</ul>
+            {% endif %}
+
+            <div class="checkbox-group" onclick="toggleCheckbox('id_agree_to_post_twice')">
+                <input type="checkbox" name="agree_to_post_twice" id="id_agree_to_post_twice">
+                <label for="id_agree_to_post_twice">I agree to post and promote this every week</label>
+            </div>
+        </div>
+
+        <!-- Signature -->
+        <div class="form-section">
+            <h2>Signature</h2>
+            <div class="form-group">
+                <label class="required-field">E-Signature Field</label>
+                {{ form.signature }}
+                <span class="help-text">Type your full name as your electronic signature</span>
+                <button type="button" class="clear-signature" onclick="clearSignature()">Clear</button>
+                {% if form.signature.errors %}
+                <ul class="errorlist">{{ form.signature.errors }}</ul>
+                {% endif %}
+            </div>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Agreement</button>
+    </form>
+</div>
+
+<script>
+    // Toggle bank name field based on payment method
+    const paymentMethodField = document.querySelector('#id_payment_method');
+    const bankNameField = document.querySelector('#bankNameField');
+
+    function toggleBankNameField() {
+        if (paymentMethodField && paymentMethodField.value === 'echeck') {
+            bankNameField.style.display = 'block';
+        } else if (bankNameField) {
+            bankNameField.style.display = 'none';
+        }
+    }
+
+    if (paymentMethodField) {
+        toggleBankNameField();
+        paymentMethodField.addEventListener('change', toggleBankNameField);
+    }
+
+    // Clear signature field
+    function clearSignature() {
+        const signatureField = document.querySelector('#id_signature');
+        if (signatureField) {
+            signatureField.value = '';
+        }
+    }
+
+    // Month picker functionality
+    const monthInput = document.querySelector('#id_contract_duration');
+    const selectedMonthDisplay = document.querySelector('#selectedMonthDisplay');
+
+    if (monthInput) {
+        // Set minimum month to current month
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        monthInput.min = `${year}-${month}`;
+
+        // Make the entire input clickable
+        monthInput.style.cursor = 'pointer';
+
+        // For browsers that support showPicker()
+        if (monthInput.showPicker) {
+            monthInput.addEventListener('click', function () {
+                this.showPicker();
+            });
+        }
+
+        // Display selected month in a readable format
+        function displaySelectedMonth() {
+            if (monthInput.value && selectedMonthDisplay) {
+                const [year, month] = monthInput.value.split('-');
+                const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthName = monthNames[parseInt(month) - 1];
+                selectedMonthDisplay.textContent = `Selected: ${monthName} ${year}`;
+                selectedMonthDisplay.classList.add('show');
+            } else if (selectedMonthDisplay) {
+                selectedMonthDisplay.classList.remove('show');
+            }
+        }
+
+        monthInput.addEventListener('change', displaySelectedMonth);
+
+        // Call on page load if there's a value
+        displaySelectedMonth();
+    }
+
+    // Toggle checkboxes when clicking the entire box
+    function toggleCheckbox(checkboxId) {
+        const checkbox = document.getElementById(checkboxId);
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            // Trigger change event for any form validation
+            const event = new Event('change', { bubbles: true });
+            checkbox.dispatchEvent(event);
+        }
+    }
+
+    // Make sure the checkbox itself still works when clicked directly
+    document.querySelectorAll('.checkbox-group input').forEach(checkbox => {
+        checkbox.addEventListener('click', function (e) {
+            e.stopPropagation(); // Prevent double toggling
+        });
+    });
+</script>
+{% endblock %}

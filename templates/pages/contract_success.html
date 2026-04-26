@@ -1,0 +1,18 @@
+<!-- templates/pages/contract_success.html -->
+{% extends 'base.html' %}
+
+{% block title %}Agreement Submitted - Veloura Beauty{% endblock %}
+
+{% block content %}
+<div
+    style="max-width: 600px; margin: 120px auto 4rem; padding: 2rem; text-align: center; background: var(--white); border-radius: 12px;">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+    <h1 style="font-family: 'Playfair Display', serif; color: var(--deep-mauve); margin-bottom: 1rem;">Thank You!</h1>
+    <p style="color: #7a6b65; margin-bottom: 1rem;">Your contract agreement has been submitted successfully.</p>
+    <p style="color: #7a6b65; margin-bottom: 2rem;">We will review your agreement and contact you within 2-3 business
+        days.</p>
+    <a href="/"
+        style="display: inline-block; padding: 0.8rem 2rem; background: var(--deep-mauve); color: white; text-decoration: none; border-radius: 30px;">Return
+        to Home</a>
+</div>
+{% endblock %}

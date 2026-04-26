@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<meta name="description" content="Review your cart and proceed to secure checkout.">
+<meta name="keywords" content="shopping cart, checkout, order tracking, online store">
+{% endblock %}
+
+{% block content %}
+<h1>Your Cart</h1>
+
+<div id="cart-items">
+</div>
+
+<h3 id="total"></h3>
+
+<hr>
+
+<h2>Checkout</h2>
+
+<form id="checkout-form">
+    <input type="text" id="name" placeholder="Full Name" required><br><br>
+    <input type="email" id="email" placeholder="Email" required><br><br>
+    <input type="text" id="phone" placeholder="Phone" required><br><br>
+    <textarea id="address" placeholder="Address" required></textarea><br><br>
+
+    <button type="submit">Proceed to Payment</button>
+</form>
+
+<div style="margin-top: 20px;">
+    <small>Back to <a href="/">Main Site</a></small>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Display items in the cart on page load
+    function loadCart() {
+        let cart = typeof getCart === "function" ? getCart() : JSON.parse(localStorage.getItem("cart") || "[]");
+        let container = document.getElementById("cart-items");
+        let total = 0;
+
+        container.innerHTML = "";
+
+        if (cart.length === 0) {
+            container.innerHTML = "<p>Your cart is empty.</p>";
+            return;
+        }
+
+        cart.forEach(item => {
+            total += item.price * item.qty;
+            container.innerHTML += `
+                <div class="cart-item" style="border-bottom: 1px solid #eee; margin-bottom: 10px;">
+                    <h4>${item.name}</h4>
+                    <p>Qty: ${item.qty} | Price: $${item.price}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById("total").innerText = "Total: $" + total.toFixed(2);
+    }
+
+    // Handle form submission
+    document.getElementById("checkout-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        let cart = typeof getCart === "function" ? getCart() : JSON.parse(localStorage.getItem("cart") || "[]");
+
+        fetch("/create-order/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": typeof getCSRFToken === "function" ? getCSRFToken() : ""
+            },
+            body: JSON.stringify({
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                phone: document.getElementById("phone").value,
+                address: document.getElementById("address").value,
+                cart: cart
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                // Clear cart from storage
+                localStorage.removeItem("cart");
+
+                // Update UI with success message and tracking link
+                document.body.innerHTML = `
+                <div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
+                    <h2>Order Successful 🎉</h2>
+                    <p>Your tracking code is:</p>
+                    <h1 style="color: #2c3e50;">${data.tracking_code}</h1>
+                    <p>Use this to track your order status.</p>
+                    <a href="/track/" style="display: inline-block; padding: 10px 20px; background: #007bff; color: #fff; text-decoration: none; border-radius: 5px;">Track Order</a>
+                    <br><br>
+                    <p><small>Return to <a href="/">Official Site</a></small></p>
+                </div>
+            `;
+            })
+            .catch(err => {
+                console.error("Error creating order:", err);
+                alert("There was an issue processing your order. Please try again.");
+            });
+    });
+
+    // Initialize the cart view
+    loadCart();
+</script>
+{% endblock %}
