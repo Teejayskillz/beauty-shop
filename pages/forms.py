@@ -7,10 +7,10 @@ class ContractAgreementForm(forms.ModelForm):
         widget=forms.DateInput(attrs={
             'type': 'month',  # This shows month/year picker instead of full date
             'class': 'date-picker',
-            'placeholder': 'Select contract start month',
+            'placeholder': 'Select contract duration',
             'onclick': 'this.showPicker()',
         }),
-        help_text="Select the start month of your contract"
+        help_text="Select contract duration"
     )
     
     class Meta:
