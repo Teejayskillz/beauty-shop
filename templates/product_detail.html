@@ -145,6 +145,11 @@
         background: none;
         cursor: pointer;
         font-size: 1rem;
+        transition: background 0.3s ease;
+    }
+
+    .qty-btn:hover {
+        background: var(--cream);
     }
 
     .qty-value {
@@ -209,6 +214,11 @@
     .rel-card {
         text-decoration: none;
         color: inherit;
+        transition: transform 0.3s ease;
+    }
+
+    .rel-card:hover {
+        transform: translateY(-5px);
     }
 
     .rel-img {
@@ -259,6 +269,10 @@
                 <div class="main-image">
                     {% if product.product_image %}
                     <img src="{{ product.product_image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    <div
+                        style="width:100%;height:100%;background: var(--ivory); display: flex; align-items: center; justify-content: center; color: #999;">
+                        No Image</div>
                     {% endif %}
                 </div>
             </div>
@@ -266,7 +280,7 @@
             <!-- INFO -->
             <div class="product-info">
 
-                <div class="category">{{ product.category }}</div>
+                <div class="category">{{ product.get_category_display|default:product.category }}</div>
 
                 <h1 class="product-title">{{ product.name }}</h1>
 
@@ -291,27 +305,23 @@
                     </div>
 
                     <button onclick="addProduct()" class="add-btn">
-                        Add to Cart — <span id="total">${{ product.price }}</span>
+                        Add to Cart — $<span id="total">{{ product.price }}</span>
                     </button>
 
                 </div>
 
                 <div class="benefits">
                     <div class="benefit">
-                        <i data-feather="droplet"></i>
-                        Moisture retention
+                        💧 Moisture retention
                     </div>
                     <div class="benefit">
-                        <i data-feather="shield"></i>
-                        Hair protection
+                        🛡️ Hair protection
                     </div>
                     <div class="benefit">
-                        <i data-feather="sliders"></i>
-                        Adjustable fit
+                        ⚙️ Adjustable fit
                     </div>
                     <div class="benefit">
-                        <i data-feather="truck"></i>
-                        Fast delivery
+                        🚚 Fast delivery
                     </div>
                 </div>
 
@@ -325,16 +335,17 @@
             <div class="related-grid">
                 {% for item in related_products %}
                 <a href="{% url 'product_detail' item.id %}" class="rel-card">
-
                     <div class="rel-img">
                         {% if item.product_image %}
-                        <img src="{{ item.product_image.url }}">
+                        <img src="{{ item.product_image.url }}" alt="{{ item.name }}">
+                        {% else %}
+                        <div
+                            style="width:100%;height:100%;background: var(--ivory); display: flex; align-items: center; justify-content: center; color: #999;">
+                            No Image</div>
                         {% endif %}
                     </div>
-
                     <h3 style="font-size:1rem;">{{ item.name }}</h3>
                     <p style="color:var(--deep-mauve);">${{ item.price }}</p>
-
                 </a>
                 {% endfor %}
             </div>
@@ -345,37 +356,83 @@
 </div>
 
 <script>
-
     let qty = 1;
-    const price = parseFloat("{{ product.price }}");
+    const productPrice = parseFloat("{{ product.price }}");
+    const productId = "{{ product.id }}";
+    const productName = "{{ product.name|escapejs }}";
 
     function updateQty(val) {
         qty += val;
         if (qty < 1) qty = 1;
+        if (qty > 99) qty = 99;
 
         document.getElementById('qty').innerText = qty;
-        document.getElementById('total').innerText = "$" + (qty * price).toFixed(2);
+        const total = (qty * productPrice).toFixed(2);
+        document.getElementById('total').innerText = total;
     }
 
     function addProduct() {
-        const id = "{{ product.id }}";
-        const name = "{{ product.name|escapejs }}";
-
+        // Get current cart
         let cart = getCart();
-        let item = cart.find(i => i.id === id);
 
-        if (item) {
-            item.qty += qty;
+        // Check if product already exists in cart
+        let existingItem = cart.find(item => item.id === productId);
+
+        if (existingItem) {
+            // Update quantity
+            existingItem.qty += qty;
         } else {
-            cart.push({ id, name, price, qty });
+            // Add new item
+            cart.push({
+                id: productId,
+                name: productName,
+                price: productPrice,
+                qty: qty
+            });
         }
 
+        // Save to localStorage
         saveCart(cart);
-        showAlert(qty + " x " + name + " added");
 
+        // Show success message
+        const message = qty + " × " + productName + " added to cart!";
+        if (typeof showAlert === 'function') {
+            showAlert(message);
+        } else {
+            alert(message);
+        }
+
+        // Reset quantity to 1
         qty = 1;
-        updateQty(0);
+        document.getElementById('qty').innerText = qty;
+        document.getElementById('total').innerText = productPrice.toFixed(2);
+
+        // Update cart icon if function exists
+        if (typeof updateCartUI === 'function') {
+            updateCartUI();
+        }
     }
 
+    // Make sure getCart and saveCart are available from base.html
+    // If not, define them here as fallback
+    if (typeof getCart === 'undefined') {
+        function getCart() {
+            try {
+                const cart = localStorage.getItem('cart');
+                return cart ? JSON.parse(cart) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+    }
+
+    if (typeof saveCart === 'undefined') {
+        function saveCart(cart) {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            if (typeof updateCartUI === 'function') {
+                updateCartUI();
+            }
+        }
+    }
 </script>
 {% endblock %}
