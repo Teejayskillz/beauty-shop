@@ -9,9 +9,9 @@ from .models import Product, Order, OrderItem
 
 def shop_view(request):
     products = Product.objects.all()
-    print(f"Number of products: {products.count()}")
-    for product in products:
-        print(f"Product: {product.name}, Description: {product.description}")
+    #print(f"Number of products: {products.count()}")
+    #for product in products:
+    #    print(f"Product: {product.name}, Description: {product.description}")
     
     context = {
         'products': products,
