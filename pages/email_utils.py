@@ -25,10 +25,10 @@ def send_custom_email(subject, body, to_email):
         server.send_message(msg)
         server.quit()
         
-        print(f"✅ Email sent to {to_email}")
+        print(f" Email sent to {to_email}")
         return True
     except Exception as e:
-        print(f"❌ Email failed: {e}")
+        print(f" Email failed: {e}")
         return False
 
 def send_contract_notification(contract):
