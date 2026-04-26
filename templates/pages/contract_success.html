@@ -3,16 +3,196 @@
 
 {% block title %}Agreement Submitted - Veloura Beauty{% endblock %}
 
+{% block extra_css %}
+<style>
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, var(--deep-mauve), var(--dusty-rose));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        animation: scaleIn 0.5s ease-out;
+    }
+
+    .success-icon svg {
+        width: 45px;
+        height: 45px;
+        stroke: white;
+        stroke-width: 2;
+        fill: none;
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-container {
+        max-width: 600px;
+        margin: 120px auto 4rem;
+        padding: 3rem;
+        text-align: center;
+        background: var(--white);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        animation: fadeUp 0.6s ease-out;
+    }
+
+    @keyframes fadeUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .success-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: var(--deep-mauve);
+        margin-bottom: 1rem;
+    }
+
+    .success-message {
+        color: #7a6b65;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .success-divider {
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, var(--dusty-rose), var(--gold));
+        margin: 1.5rem auto;
+    }
+
+    .home-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: var(--deep-mauve);
+        color: white;
+        text-decoration: none;
+        border-radius: 40px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+        border: 2px solid var(--deep-mauve);
+        margin-top: 1rem;
+    }
+
+    .home-btn:hover {
+        background: transparent;
+        color: var(--deep-mauve);
+        transform: translateY(-2px);
+    }
+
+    .home-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        transition: transform 0.3s ease;
+    }
+
+    .home-btn:hover svg {
+        transform: translateX(-3px);
+    }
+
+    .info-box {
+        background: var(--cream);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        text-align: left;
+    }
+
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 0.8rem;
+        font-size: 0.9rem;
+        color: var(--soft-brown);
+    }
+
+    .info-row svg {
+        width: 18px;
+        height: 18px;
+        stroke: var(--dusty-rose);
+        stroke-width: 1.5;
+        fill: none;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+        .success-container {
+            margin: 100px 1rem 2rem;
+            padding: 2rem;
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div
-    style="max-width: 600px; margin: 120px auto 4rem; padding: 2rem; text-align: center; background: var(--white); border-radius: 12px;">
-    <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
-    <h1 style="font-family: 'Playfair Display', serif; color: var(--deep-mauve); margin-bottom: 1rem;">Thank You!</h1>
-    <p style="color: #7a6b65; margin-bottom: 1rem;">Your contract agreement has been submitted successfully.</p>
-    <p style="color: #7a6b65; margin-bottom: 2rem;">We will review your agreement and contact you within 2-3 business
-        days.</p>
-    <a href="/"
-        style="display: inline-block; padding: 0.8rem 2rem; background: var(--deep-mauve); color: white; text-decoration: none; border-radius: 30px;">Return
-        to Home</a>
+<div class="success-container">
+    <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12" stroke="currentColor" fill="none" stroke-width="3" />
+        </svg>
+    </div>
+
+    <h1 class="success-title">Thank You!</h1>
+
+    <p class="success-message">Your contract agreement has been submitted successfully.</p>
+
+    <div class="info-box">
+        <div class="info-row">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" fill="none" stroke-width="2" />
+                <polyline points="12 6 12 12 16 14" stroke="currentColor" fill="none" stroke-width="2" />
+            </svg>
+            <span>We'll review your agreement within 2-3 business days</span>
+        </div>
+        <div class="info-row">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                    stroke="currentColor" fill="none" stroke-width="2" />
+                <polyline points="22,6 12,13 2,6" stroke="currentColor" fill="none" stroke-width="2" />
+            </svg>
+            <span>You'll receive a confirmation email shortly</span>
+        </div>
+    </div>
+
+    <div class="success-divider"></div>
+
+    <a href="/" class="home-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-5v-8H9v8H5a2 2 0 0 1-2-2z" stroke="currentColor" fill="none"
+                stroke-width="2" />
+        </svg>
+        Return to Home
+    </a>
 </div>
 {% endblock %}
