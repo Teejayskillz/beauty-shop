@@ -1,0 +1,190 @@
+<!-- templates/pages/contract_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}Contract Details - Veloura Beauty{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-container {
+        max-width: 800px;
+        margin: 120px auto 4rem;
+        padding: 2rem;
+        background: var(--white);
+        border-radius: 12px;
+        border: 1px solid rgba(201, 137, 122, 0.1);
+    }
+
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--blush);
+    }
+
+    .detail-header h1 {
+        font-family: 'Playfair Display', serif;
+        color: var(--deep-mauve);
+        font-size: 1.5rem;
+    }
+
+    .back-link {
+        color: var(--dusty-rose);
+        text-decoration: none;
+    }
+
+    .section {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--deep-mauve);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e0d5cf;
+    }
+
+    .info-row {
+        display: flex;
+        margin-bottom: 0.8rem;
+    }
+
+    .info-label {
+        width: 140px;
+        font-weight: 500;
+        color: var(--soft-brown);
+    }
+
+    .info-value {
+        flex: 1;
+        color: var(--charcoal);
+    }
+
+    .payment-methods {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .payment-badge {
+        background: var(--cream);
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    @media (max-width: 768px) {
+        .info-row {
+            flex-direction: column;
+        }
+
+        .info-label {
+            margin-bottom: 0.3rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-container">
+    <div class="detail-header">
+        <h1>Contract #{{ contract.id }}</h1>
+        <a href="{% url 'contract_list' %}" class="back-link">← Back to List</a>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Personal Information</div>
+        <div class="info-row">
+            <div class="info-label">Full Name:</div>
+            <div class="info-value">{{ contract.first_name }} {{ contract.last_name }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Email:</div>
+            <div class="info-value">{{ contract.email }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Phone:</div>
+            <div class="info-value">{{ contract.phone }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Address</div>
+        <div class="info-row">
+            <div class="info-label">Street:</div>
+            <div class="info-value">{{ contract.street_address }}</div>
+        </div>
+        {% if contract.address_line2 %}
+        <div class="info-row">
+            <div class="info-label">Address Line 2:</div>
+            <div class="info-value">{{ contract.address_line2 }}</div>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <div class="info-label">City:</div>
+            <div class="info-value">{{ contract.city }}, {{ contract.state_region }} {{ contract.postal_code }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Country:</div>
+            <div class="info-value">{{ contract.country }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Contract Details</div>
+        <div class="info-row">
+            <div class="info-label">Start Date:</div>
+            <div class="info-value">{{ contract.contract_duration|date:"F Y" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Payment Methods:</div>
+            <div class="info-value">
+                <div class="payment-methods">
+                    {% for method in contract.payment_methods.all %}
+                    <span class="payment-badge">{{ method.name }}</span>
+                    {% empty %}
+                    Not specified
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% if contract.bank_name %}
+        <div class="info-row">
+            <div class="info-label">Bank Name:</div>
+            <div class="info-value">{{ contract.bank_name }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="section">
+        <div class="section-title">Agreement Terms</div>
+        <div class="info-row">
+            <div class="info-label">Post & Promote:</div>
+            <div class="info-value">{{ contract.agree_to_promote|yesno:"✅ Agreed,❌ Not agreed" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Post Twice Weekly:</div>
+            <div class="info-value">{{ contract.agree_to_post_twice|yesno:"✅ Agreed,❌ Not agreed" }}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Signature & Metadata</div>
+        <div class="info-row">
+            <div class="info-label">Signed by:</div>
+            <div class="info-value">{{ contract.signature }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">Submitted:</div>
+            <div class="info-value">{{ contract.created_at|date:"F j, Y g:i A" }}</div>
+        </div>
+        <div class="info-row">
+            <div class="info-label">IP Address:</div>
+            <div class="info-value">{{ contract.ip_address|default:"Not recorded" }}</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

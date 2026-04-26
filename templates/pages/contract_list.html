@@ -1,0 +1,197 @@
+<!-- templates/pages/contract_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Submitted Contracts - Veloura Beauty{% endblock %}
+
+{% block extra_css %}
+<style>
+    .contracts-container {
+        max-width: 1200px;
+        margin: 120px auto 4rem;
+        padding: 0 2rem;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header h1 {
+        font-family: 'Playfair Display', serif;
+        color: var(--deep-mauve);
+    }
+
+    .logout-btn {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: var(--deep-mauve);
+        border: 1px solid var(--dusty-rose);
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+        background: var(--cream);
+    }
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: var(--white);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid rgba(201, 137, 122, 0.1);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--deep-mauve);
+    }
+
+    .stat-label {
+        color: #7a6b65;
+        font-size: 0.9rem;
+        margin-top: 0.3rem;
+    }
+
+    .contracts-table {
+        background: var(--white);
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(201, 137, 122, 0.1);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        text-align: left;
+        padding: 1rem;
+        background: var(--cream);
+        font-weight: 600;
+        color: var(--soft-brown);
+    }
+
+    td {
+        padding: 1rem;
+        border-top: 1px solid #f0e8e3;
+        color: var(--charcoal);
+    }
+
+    tr:hover {
+        background: var(--cream);
+    }
+
+    .view-link {
+        color: var(--deep-mauve);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .view-link:hover {
+        text-decoration: underline;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-processing {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .status-shipped {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    .status-delivered {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    @media (max-width: 768px) {
+        .contracts-table {
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="contracts-container">
+    <div class="header">
+        <h1>Submitted Contracts</h1>
+        <a href="{% url 'contract_logout' %}" class="logout-btn">🔒 Logout</a>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ contracts.count }}</div>
+            <div class="stat-label">Total Contracts</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ contracts|length }}</div>
+            <div class="stat-label">This Month</div>
+        </div>
+    </div>
+
+    <div class="contracts-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contract in contracts %}
+                <tr>
+                    <td>#{{ contract.id }}</td>
+                    <td>{{ contract.first_name }} {{ contract.last_name }}</td>
+                    <td>{{ contract.email }}</td>
+                    <td>{{ contract.phone }}</td>
+                    <td>{{ contract.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'contract_detail' contract.id %}" class="view-link">View Details →</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 3rem;">No contracts submitted yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

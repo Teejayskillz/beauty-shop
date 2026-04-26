@@ -1,15 +1,18 @@
 from shop.models import Product
 import random
-from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from .forms import ContractAgreementForm
-from .models import ContractAgreement
 from datetime import datetime
 from .email_utils import send_contract_notification
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_protect
+from .models import ContractAgreement, PaymentMethod
+
 
 def home_view(request):
     # Get all products and shuffle them randomly
@@ -72,3 +75,39 @@ def contract_agreement_view(request):
 
 def contract_success_view(request):
     return render(request, 'pages/contract_success.html')
+
+
+def contract_list_view(request):
+    """View all submitted contracts - requires password"""
+    # Check if password is already in session
+    if request.session.get('contract_view_authorized'):
+        contracts = ContractAgreement.objects.all().order_by('-created_at')
+        return render(request, 'pages/contract_list.html', {'contracts': contracts})
+    
+    # Check if password was submitted
+    if request.method == 'POST':
+        entered_password = request.POST.get('password')
+        if entered_password == settings.CONTRACT_VIEW_PASSWORD:
+            request.session['contract_view_authorized'] = True
+            request.session.set_expiry(3600)  # Expire after 1 hour
+            contracts = ContractAgreement.objects.all().order_by('-created_at')
+            return render(request, 'pages/contract_list.html', {'contracts': contracts})
+        else:
+            messages.error(request, 'Invalid password. Please try again.')
+    
+    return render(request, 'pages/contract_password.html')
+
+def contract_detail_view(request, contract_id):
+    """View individual contract details"""
+    # Check if authorized
+    if not request.session.get('contract_view_authorized'):
+        return redirect('contract_list')
+    
+    contract = get_object_or_404(ContractAgreement, id=contract_id)
+    return render(request, 'pages/contract_detail.html', {'contract': contract})
+
+def contract_logout_view(request):
+    """Logout from contract view"""
+    request.session.pop('contract_view_authorized', None)
+    messages.success(request, 'You have been logged out.')
+    return redirect('contract_list')    
