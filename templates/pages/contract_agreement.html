@@ -81,7 +81,6 @@
         letter-spacing: 0.5px;
     }
 
-    /* Make the entire input clickable */
     .form-group input[type="month"]::-webkit-calendar-picker-indicator {
         position: absolute;
         right: 0;
@@ -105,7 +104,7 @@
         border-color: var(--dusty-rose);
     }
 
-    /* Checkbox styling - Improved */
+    /* Checkbox styling */
     .checkbox-group {
         display: flex;
         align-items: center;
@@ -219,7 +218,6 @@
         font-size: 1.2rem;
     }
 
-    /* Display the selected month nicely */
     .selected-month-display {
         margin-top: 0.5rem;
         font-size: 0.85rem;
@@ -249,52 +247,89 @@
         .checkbox-group label {
             font-size: 0.9rem;
         }
+
+        .payment-methods-group {
+            flex-direction: column;
+        }
     }
 
-    /* Payment Methods Checkbox Styling */
+    /* ===== PAYMENT METHOD STYLING ===== */
+
     .payment-methods-group {
         display: flex;
-        gap: 2rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
         margin-top: 0.5rem;
     }
 
-    .payment-methods-group div {
+    .payment-option {
+        position: relative;
+        cursor: pointer;
+    }
+
+    .payment-option input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .payment-option-inner {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.8rem 1.5rem;
-        background: var(--white);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        gap: 0.6rem;
+        padding: 0.65rem 1.1rem;
         border: 1.5px solid #e0d5cf;
-    }
-
-    .payment-methods-group div:hover {
-        background: var(--cream);
-        border-color: var(--dusty-rose);
-        transform: translateY(-2px);
-    }
-
-    .payment-methods-group input {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        accent-color: var(--deep-mauve);
-        margin: 0;
-    }
-
-    .payment-methods-group label {
-        cursor: pointer;
-        margin: 0;
+        border-radius: 8px;
+        background: var(--white);
+        transition: border-color 0.2s ease, background 0.2s ease;
+        font-size: 0.9rem;
         font-weight: 500;
         color: var(--soft-brown);
+        white-space: nowrap;
     }
 
-    /* Make the entire payment method box clickable */
-    .payment-methods-group div {
-        cursor: pointer;
+    .pay-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1.5px solid #c9b3bb;
+        background: var(--white);
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .pay-dot::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--deep-mauve);
+        transition: transform 0.2s ease;
+    }
+
+    .payment-option:hover .payment-option-inner {
+        border-color: var(--dusty-rose);
+        background: var(--cream);
+    }
+
+    .payment-option input:checked~.payment-option-inner {
+        border-color: var(--deep-mauve);
+        background: var(--cream);
+        color: var(--deep-mauve);
+    }
+
+    .payment-option input:checked~.payment-option-inner .pay-dot {
+        border-color: var(--deep-mauve);
+    }
+
+    .payment-option input:checked~.payment-option-inner .pay-dot::after {
+        transform: translate(-50%, -50%) scale(1);
     }
 </style>
 {% endblock %}
@@ -395,7 +430,7 @@
             </div>
         </div>
 
-        <!-- Contract Details Section - REPLACE the entire Contract Details section -->
+        <!-- Contract Details -->
         <div class="form-section">
             <h2>Contract Details</h2>
             <div class="form-row">
@@ -412,18 +447,26 @@
                 </div>
             </div>
 
-            <!-- Payment Methods - Checkboxes -->
+            <!-- Payment Methods -->
             <div class="form-group">
                 <label class="required-field">Payment Method (Select all that apply)</label>
                 <div class="payment-methods-group">
-                    {{ form.payment_methods }}
+                    {% for checkbox in form.payment_methods %}
+                    <label class="payment-option">
+                        {{ checkbox.tag }}
+                        <div class="payment-option-inner">
+                            <span class="pay-dot"></span>
+                            <span class="label-text">{{ checkbox.choice_label }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
                 </div>
                 {% if form.payment_methods.errors %}
                 <ul class="errorlist">{{ form.payment_methods.errors }}</ul>
                 {% endif %}
             </div>
 
-            <!-- Bank Name Field - Always visible -->
+            <!-- Bank Name Field -->
             <div class="form-group" id="bankNameField">
                 <label>Bank Name (Local bank or Credit Union only)</label>
                 {{ form.bank_name }}
@@ -434,7 +477,7 @@
             </div>
         </div>
 
-        <!-- Agreement Terms - IMPROVED VERSION -->
+        <!-- Agreement Terms -->
         <div class="form-section">
             <h2>Agreement Terms</h2>
 
@@ -479,21 +522,18 @@
         }
     }
 
-    // Month picker functionality - FIXED VERSION
+    // Month picker functionality
     const monthInput = document.querySelector('#id_contract_duration');
     const selectedMonthDisplay = document.querySelector('#selectedMonthDisplay');
 
     if (monthInput) {
-        // Set minimum month to current month
         const today = new Date();
         const year = today.getFullYear();
         const month = String(today.getMonth() + 1).padStart(2, '0');
         monthInput.min = `${year}-${month}`;
 
-        // Make the entire input clickable
         monthInput.style.cursor = 'pointer';
 
-        // For browsers that support showPicker()
         if (monthInput.showPicker) {
             monthInput.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -501,21 +541,17 @@
             });
         }
 
-        // Convert month value to date format for form submission
         function convertMonthToDate(monthValue) {
             if (monthValue && monthValue.match(/^\d{4}-\d{2}$/)) {
-                // Convert YYYY-MM to YYYY-MM-01 (first day of month)
                 return monthValue + '-01';
             }
             return monthValue;
         }
 
-        // Handle form submission to convert month to date
         const form = document.querySelector('form');
         if (form) {
             form.addEventListener('submit', function (e) {
                 if (monthInput.value && monthInput.value.match(/^\d{4}-\d{2}$/)) {
-                    // Convert to YYYY-MM-01 format before submission
                     const hiddenInput = document.createElement('input');
                     hiddenInput.type = 'hidden';
                     hiddenInput.name = 'contract_duration';
@@ -526,7 +562,6 @@
             });
         }
 
-        // Display selected month in a readable format
         function displaySelectedMonth() {
             if (monthInput.value && selectedMonthDisplay) {
                 const [year, month] = monthInput.value.split('-');
@@ -541,8 +576,6 @@
         }
 
         monthInput.addEventListener('change', displaySelectedMonth);
-
-        // Call on page load if there's a value
         displaySelectedMonth();
     }
 
@@ -551,53 +584,16 @@
         const checkbox = document.getElementById(checkboxId);
         if (checkbox) {
             checkbox.checked = !checkbox.checked;
-            // Trigger change event for any form validation
             const event = new Event('change', { bubbles: true });
             checkbox.dispatchEvent(event);
         }
     }
 
-    // Make sure the checkbox itself still works when clicked directly
+    // Prevent double-toggle on direct checkbox click
     document.querySelectorAll('.checkbox-group input').forEach(checkbox => {
         checkbox.addEventListener('click', function (e) {
-            e.stopPropagation(); // Prevent double toggling
+            e.stopPropagation();
         });
-    });
-
-    // Make payment method boxes clickable
-    document.querySelectorAll('.payment-methods-group div').forEach(box => {
-        const checkbox = box.querySelector('input[type="checkbox"]');
-        if (checkbox) {
-            box.addEventListener('click', function (e) {
-                // Don't trigger if clicking directly on the checkbox
-                if (e.target !== checkbox) {
-                    checkbox.checked = !checkbox.checked;
-                    // Trigger change event
-                    const event = new Event('change', { bubbles: true });
-                    checkbox.dispatchEvent(event);
-
-                    // Update box styling
-                    if (checkbox.checked) {
-                        box.style.background = 'var(--cream)';
-                        box.style.borderColor = 'var(--deep-mauve)';
-                    } else {
-                        box.style.background = 'var(--white)';
-                        box.style.borderColor = '#e0d5cf';
-                    }
-                }
-            });
-
-            // Style based on checked state
-            checkbox.addEventListener('change', function () {
-                if (this.checked) {
-                    box.style.background = 'var(--cream)';
-                    box.style.borderColor = 'var(--deep-mauve)';
-                } else {
-                    box.style.background = 'var(--white)';
-                    box.style.borderColor = '#e0d5cf';
-                }
-            });
-        }
     });
 </script>
 {% endblock %}
