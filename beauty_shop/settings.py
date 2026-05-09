@@ -147,5 +147,6 @@ EMAIL_HOST_USER = 'samantha@velourabeautyco.shop'
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Your actual email password
 DEFAULT_FROM_EMAIL = f'Veloura Beauty <{EMAIL_HOST_USER}>'
 ADMIN_EMAIL = os.getenv('ADMIN_EMAIL')
+ADMIN_EMAIL_2 = os.getenv('ADMIN_EMAIL_2')
 
 CONTRACT_VIEW_PASSWORD = os.getenv('CONTRACT_VIEW_PASSWORD')

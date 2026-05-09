@@ -73,6 +73,33 @@ def contract_agreement_view(request):
     
     return render(request, 'pages/contract_agreement.html', {'form': form})
 
+def contract_agreement_view_2(request):
+    if request.method == 'POST':
+        form = ContractAgreementForm(request.POST)
+        if form.is_valid():
+            contract = form.save(commit=False)
+            
+            # Get client IP address
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                contract.ip_address = x_forwarded_for.split(',')[0]
+            else:
+                contract.ip_address = request.META.get('REMOTE_ADDR')
+            
+            contract.save()
+            form.save_m2m()  # Save payment_methods ManyToMany
+            
+            # Send email notification
+            send_contract_notification_2(contract)
+            
+            messages.success(request, 'Your contract agreement has been submitted successfully!')
+            return redirect('contract_success')
+    else:
+        form = ContractAgreementForm()
+    
+    return render(request, 'pages/contract_agreement_2.html', {'form': form})
+
+
 def contract_success_view(request):
     return render(request, 'pages/contract_success.html')
 
