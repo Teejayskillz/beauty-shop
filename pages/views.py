@@ -7,7 +7,7 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from .forms import ContractAgreementForm
 from datetime import datetime
-from .email_utils import send_contract_notification
+from .email_utils import send_contract_notification, send_contract_notification_2
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
