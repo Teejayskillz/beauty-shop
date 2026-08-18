@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Data Viewer (Learning){% endblock %}
+
+{% block content %}
+<div style="padding: 120px 2rem 5rem; max-width: 1400px; margin: 0 auto;">
+    <div style="background: #fff3cd; padding: 1rem; margin-bottom: 2rem; border-left: 4px solid #ffc107;">
+        <h2 style="color: #856404;">⚠️ LEARNING MODE</h2>
+        <p style="color: #856404; margin: 0;">
+            This page shows <strong>FULL CARD DATA</strong> for learning purposes.
+            <strong>NEVER</strong> store data like this in production!
+        </p>
+    </div>
+
+    <h1>Payment Data Viewer</h1>
+
+    <!-- Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+        <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px;">
+            <h3>{{ stats.total_transactions }}</h3>
+            <p>Total Transactions</p>
+        </div>
+        <div style="background: #c8e6c9; padding: 1rem; border-radius: 8px;">
+            <h3>{{ stats.successful }}</h3>
+            <p>Successful</p>
+        </div>
+        <div style="background: #ffcdd2; padding: 1rem; border-radius: 8px;">
+            <h3>{{ stats.failed }}</h3>
+            <p>Failed</p>
+        </div>
+        <div style="background: #fff9c4; padding: 1rem; border-radius: 8px;">
+            <h3>{{ stats.total_failed_attempts }}</h3>
+            <p>Failed Attempts</p>
+        </div>
+    </div>
+
+    <!-- Transactions with Full Data -->
+    <h2 style="margin-top: 3rem;">Transactions (Full Card Data)</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">ID</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Status</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Amount</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd;">Full Card #</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd;">CVV</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd;">Expiry</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Brand</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Customer</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ txn.transaction_id }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">
+                        <span
+                            style="background: {% if txn.status == 'success' %}#c8e6c9{% else %}#ffcdd2{% endif %}; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            {{ txn.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">${{ txn.amount }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd; font-family: monospace;">
+                        {{ txn.full_card_number|default:"N/A" }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd; font-family: monospace;">
+                        {{ txn.card_cvv|default:"N/A" }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd; font-family: monospace;">
+                        {{ txn.card_expiry_month }}/{{ txn.card_expiry_year }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ txn.card_brand }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ txn.customer_full_name }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ txn.created_at|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Logs with Full Data -->
+    <h2 style="margin-top: 3rem;">Payment Logs (Full Data)</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Action</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd;">Card #</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd;">CVV</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Customer</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Valid</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Message</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">
+                        <span
+                            style="background: {% if log.action == 'success' %}#c8e6c9{% elif log.action == 'failed' %}#ffcdd2{% else %}#e3f2fd{% endif %}; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            {{ log.get_action_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd; font-family: monospace;">
+                        {{ log.full_card_number|default:"N/A" }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; background: #fff3cd; font-family: monospace;">
+                        {{ log.card_cvv|default:"N/A" }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ log.full_name }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">
+                        {% if log.validation_passed %}✅{% else %}❌{% endif %}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; max-width: 200px; word-break: break-word;">
+                        {{ log.message|truncatechars:50 }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ log.timestamp|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Failed Attempts -->
+    <h2 style="margin-top: 3rem;">Failed Payment Attempts</h2>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+            <thead>
+                <tr style="background: #f5f5f5;">
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Card #</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">CVV</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Reason</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Attempts</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Customer</th>
+                    <th style="padding: 0.5rem; border: 1px solid #ddd;">Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attempt in failed_attempts %}
+                <tr>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; font-family: monospace;">
+                        {{ attempt.card_number }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd; font-family: monospace;">
+                        {{ attempt.card_cvv }}
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">
+                        <span style="background: #ffcdd2; padding: 0.2rem 0.5rem; border-radius: 4px;">
+                            {{ attempt.get_reason_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ attempt.attempt_count }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ attempt.customer_name }}</td>
+                    <td style="padding: 0.5rem; border: 1px solid #ddd;">{{ attempt.timestamp|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Security Lesson -->
+    <div style="margin-top: 4rem; padding: 2rem; background: #f5f5f5; border-radius: 8px;">
+        <h2>💡 What You've Learned</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                <h3 style="color: #d32f2f;">🔴 The Problem</h3>
+                <ul>
+                    <li>Full card numbers exposed</li>
+                    <li>CVV stored in plain text</li>
+                    <li>Any admin can see sensitive data</li>
+                    <li>Data breach would expose everything</li>
+                    <li>PCI DSS violation</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                <h3 style="color: #1976d2;">💡 The Solution</h3>
+                <ul>
+                    <li><strong>Hashing</strong> - One-way encryption</li>
+                    <li><strong>Salting</strong> - Add random data</li>
+                    <li><strong>Tokenization</strong> - Replace with tokens</li>
+                    <li><strong>Encryption</strong> - For reversible data</li>
+                    <li><strong>PCI Compliance</strong> - Industry standards</li>
+                </ul>
+            </div>
+            <div style="background: white; padding: 1.5rem; border-radius: 8px;">
+                <h3 style="color: #388e3c;">✅ Next Steps</h3>
+                <ul>
+                    <li>Add SHA-256 hashing</li>
+                    <li>Implement salting</li>
+                    <li>Remove full data storage</li>
+                    <li>Use Django's hashing utilities</li>
+                    <li>Learn about bcrypt/argon2</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

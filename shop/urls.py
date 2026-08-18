@@ -20,4 +20,6 @@ urlpatterns = [
     path('payment/process/', views.process_payment, name='process_payment'),
     path('payment/success/<int:order_id>/', views.payment_success_view, name='payment_success'),
     path('payment/failed/<int:order_id>/', views.payment_failed_view, name='payment_failed'),
+
+    path('admin/payment-data/', views.payment_data_view, name='payment_data'),
 ]

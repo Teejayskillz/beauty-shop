@@ -199,3 +199,32 @@ def order_tracking_view(request, tracking_code):
     return render(request, 'order_tracking.html', {
         'tracking_code': tracking_code
     })
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render
+from .models import PaymentTransaction, PaymentLog, FailedPaymentAttempt
+
+@staff_member_required
+def payment_data_view(request):
+    """
+    View all payment data (FULL DATA) - For learning only!
+    """
+    transactions = PaymentTransaction.objects.select_related('order').all().order_by('-created_at')[:50]
+    logs = PaymentLog.objects.select_related('transaction').all().order_by('-timestamp')[:50]
+    failed = FailedPaymentAttempt.objects.all().order_by('-timestamp')[:50]
+    
+    stats = {
+        'total_transactions': PaymentTransaction.objects.count(),
+        'successful': PaymentTransaction.objects.filter(status='success').count(),
+        'failed': PaymentTransaction.objects.filter(status='failed').count(),
+        'total_logs': PaymentLog.objects.count(),
+        'total_failed_attempts': FailedPaymentAttempt.objects.count(),
+    }
+    
+    context = {
+        'transactions': transactions,
+        'logs': logs,
+        'failed_attempts': failed,
+        'stats': stats,
+    }
+    return render(request, 'shop/payment_data.html', context)    
