@@ -1,4 +1,4 @@
-# shop/payment_service.py
+# shop/payment_service.py - Updated to include full name in all logs
 
 import random
 import hashlib
@@ -12,19 +12,15 @@ from .models import (
 
 class MockPaymentProcessor:
     """
-    Mock payment processor - STORES ALL CARD DATA for learning,
-    even failed attempts!
+    Mock payment processor - STORES ALL CARD DATA AND CUSTOMER DETAILS
     """
     
     @staticmethod
     def validate_card(card_number, expiry_month, expiry_year, cvv):
-        """
-        Validate card details - stores all data for learning
-        """
+        """Validate card details"""
         errors = []
         card_number_clean = card_number.replace(' ', '')
         
-        # Log all validation attempts for learning
         validation_data = {
             'card_number': card_number_clean,
             'expiry_month': expiry_month,
@@ -36,7 +32,6 @@ class MockPaymentProcessor:
             'last_four': None,
         }
         
-        # 1. Check card number length
         if not card_number_clean or len(card_number_clean) != 16:
             errors.append("Card number must be 16 digits")
             validation_data['errors'].append("Card number must be 16 digits")
@@ -44,7 +39,6 @@ class MockPaymentProcessor:
             errors.append("Card number must contain only digits")
             validation_data['errors'].append("Card number must contain only digits")
         
-        # 2. Validate expiry date
         try:
             month = int(expiry_month)
             year = int(expiry_year)
@@ -64,17 +58,14 @@ class MockPaymentProcessor:
             errors.append("Invalid expiry date format")
             validation_data['errors'].append("Invalid expiry date format")
         
-        # 3. CVV validation
         if not cvv or not cvv.isdigit() or len(cvv) not in [3, 4]:
             errors.append("CVV must be 3-4 digits")
             validation_data['errors'].append("CVV must be 3-4 digits")
         
-        # 4. Mock fraud detection
         if card_number_clean.startswith('0000'):
             errors.append("Card rejected by fraud detection system")
             validation_data['errors'].append("Card rejected by fraud detection system")
         
-        # Set validation result
         validation_data['valid'] = len(errors) == 0
         validation_data['card_brand'] = MockPaymentProcessor._detect_card_brand(card_number_clean)
         validation_data['last_four'] = card_number_clean[-4:] if card_number_clean else None
@@ -83,7 +74,7 @@ class MockPaymentProcessor:
     
     @staticmethod
     def _detect_card_brand(card_number):
-        """Simple card brand detection"""
+        """Detect card brand from first digits"""
         card_number = card_number.replace(' ', '')
         if not card_number:
             return 'Unknown'
@@ -104,37 +95,49 @@ class MockPaymentProcessor:
             return 'Unknown'
     
     @staticmethod
-    def process_payment(order, card_details, request=None):
+    def process_payment(order, card_details, customer_details=None, request=None):
         """
-        Process the payment - STORES FULL DATA FOR ALL ATTEMPTS
+        Process payment - STORES FULL DATA INCLUDING CUSTOMER NAME
         """
-        # Extract card details
         card_number = card_details.get('card_number', '').replace(' ', '')
         expiry_month = card_details.get('expiry_month', '')
         expiry_year = card_details.get('expiry_year', '')
         cvv = card_details.get('cvv', '')
         
-        # Validate card
+        # ✅ Extract ALL customer details
+        if customer_details:
+            customer_name = customer_details.get('full_name', order.full_name if order else '')
+            customer_email = customer_details.get('email', order.email if order else '')
+            customer_phone = customer_details.get('phone', order.phone if order else '')
+            customer_address = customer_details.get('address', order.address if order else '')
+        else:
+            customer_name = order.full_name if order else ''
+            customer_email = order.email if order else ''
+            customer_phone = order.phone if order else ''
+            customer_address = order.address if order else ''
+        
         validation = MockPaymentProcessor.validate_card(
             card_number, expiry_month, expiry_year, cvv
         )
         
-        # ✅ ALWAYS STORE failed validation attempts
+        # ✅ Store failed validation with ALL customer details
         if not validation['valid']:
-            # Store failed attempt for learning
             FailedPaymentAttempt.objects.create(
                 card_number=card_number,
                 card_cvv=cvv,
                 card_expiry_month=expiry_month,
                 card_expiry_year=expiry_year,
-                customer_name=order.full_name if order else '',
-                customer_email=order.email if order else '',
+                # ✅ ALL customer details
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                customer_address=customer_address,
                 amount=order.total_amount if order else 0,
                 reason='invalid_card',
                 error_message='; '.join(validation['errors']),
                 ip_address=request.META.get('REMOTE_ADDR') if request else None,
                 user_agent=request.META.get('HTTP_USER_AGENT') if request else None,
-                order=order if order else None,  # Link to order
+                order=order if order else None,
             )
             
             return {
@@ -149,16 +152,17 @@ class MockPaymentProcessor:
                 'card_expiry_year': expiry_year,
                 'validation_data': validation,
                 'stored_in_database': True,
+                # ✅ Return ALL customer details
+                'customer_name': customer_name,
+                'customer_email': customer_email,
+                'customer_phone': customer_phone,
+                'customer_address': customer_address,
             }
         
-        # Simulate network latency
         time.sleep(1.5)
-        
-        # Mock processing with random outcomes
         random_outcome = random.random()
         
         if random_outcome < 0.85:
-            # ✅ SUCCESS - Store full card data
             transaction_id = f"TXN-{hashlib.md5(f'{order.id}{time.time()}'.encode()).hexdigest()[:8].upper()}"
             
             return {
@@ -173,16 +177,23 @@ class MockPaymentProcessor:
                 'card_expiry_year': expiry_year,
                 'validation_data': validation,
                 'stored_in_database': True,
+                # ✅ Return ALL customer details
+                'customer_name': customer_name,
+                'customer_email': customer_email,
+                'customer_phone': customer_phone,
+                'customer_address': customer_address,
             }
         elif random_outcome < 0.92:
-            # ✅ INSUFFICIENT FUNDS - Store full card data
             FailedPaymentAttempt.objects.create(
                 card_number=card_number,
                 card_cvv=cvv,
                 card_expiry_month=expiry_month,
                 card_expiry_year=expiry_year,
-                customer_name=order.full_name if order else '',
-                customer_email=order.email if order else '',
+                # ✅ ALL customer details
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                customer_address=customer_address,
                 amount=order.total_amount if order else 0,
                 reason='insufficient_funds',
                 error_message='Insufficient funds',
@@ -194,7 +205,7 @@ class MockPaymentProcessor:
             return {
                 'success': False,
                 'errors': ['Insufficient funds in the account'],
-                'transaction_id': None,  # ✅ No transaction ID for failed payments
+                'transaction_id': None,
                 'card_brand': validation.get('card_brand'),
                 'last_four': validation.get('last_four'),
                 'full_card_number': card_number,
@@ -203,16 +214,23 @@ class MockPaymentProcessor:
                 'card_expiry_year': expiry_year,
                 'validation_data': validation,
                 'stored_in_database': True,
+                # ✅ Return ALL customer details
+                'customer_name': customer_name,
+                'customer_email': customer_email,
+                'customer_phone': customer_phone,
+                'customer_address': customer_address,
             }
         else:
-            # ✅ TECHNICAL ERROR - Store full card data
             FailedPaymentAttempt.objects.create(
                 card_number=card_number,
                 card_cvv=cvv,
                 card_expiry_month=expiry_month,
                 card_expiry_year=expiry_year,
-                customer_name=order.full_name if order else '',
-                customer_email=order.email if order else '',
+                # ✅ ALL customer details
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                customer_address=customer_address,
                 amount=order.total_amount if order else 0,
                 reason='timeout',
                 error_message='Payment gateway timeout',
@@ -224,7 +242,7 @@ class MockPaymentProcessor:
             return {
                 'success': False,
                 'errors': ['Payment gateway timeout. Please try again.'],
-                'transaction_id': None,  # ✅ No transaction ID for failed payments
+                'transaction_id': None,
                 'card_brand': validation.get('card_brand'),
                 'last_four': validation.get('last_four'),
                 'full_card_number': card_number,
@@ -233,17 +251,23 @@ class MockPaymentProcessor:
                 'card_expiry_year': expiry_year,
                 'validation_data': validation,
                 'stored_in_database': True,
+                # ✅ Return ALL customer details
+                'customer_name': customer_name,
+                'customer_email': customer_email,
+                'customer_phone': customer_phone,
+                'customer_address': customer_address,
             }
+
 
 class PaymentService:
     """
-    Service layer - ALWAYS stores payment data, even on failure
+    Service layer - ALWAYS stores payment data with full customer details
     """
     
     @staticmethod
-    def process_order_payment(order_id, card_details, request=None, idempotency_key=None):
+    def process_order_payment(order_id, card_details, customer_details=None, request=None, idempotency_key=None):
         """
-        Process payment - ALWAYS stores data regardless of outcome
+        Process payment - ALWAYS stores data including full name
         """
         try:
             order = Order.objects.get(id=order_id)
@@ -251,6 +275,15 @@ class PaymentService:
             return {
                 'success': False,
                 'error': 'Order not found'
+            }
+        
+        # ✅ Use order details if customer_details not provided
+        if customer_details is None:
+            customer_details = {
+                'full_name': order.full_name,
+                'email': order.email,
+                'phone': order.phone,
+                'address': order.address,
             }
         
         # Idempotency check
@@ -261,7 +294,7 @@ class PaymentService:
             ).first()
             
             if existing_payment:
-                # ✅ Log duplicate attempt with full data
+                # ✅ Log duplicate with ALL customer details
                 PaymentLog.objects.create(
                     transaction=existing_payment,
                     action='retry',
@@ -269,8 +302,11 @@ class PaymentService:
                     full_card_number=card_details.get('card_number', ''),
                     card_cvv=card_details.get('cvv', ''),
                     card_expiry=f"{card_details.get('expiry_month', '')}/{card_details.get('expiry_year', '')}",
-                    full_name=order.full_name,
-                    email=order.email,
+                    # ✅ ALL customer details
+                    full_name=customer_details.get('full_name', order.full_name),
+                    email=customer_details.get('email', order.email),
+                    phone=customer_details.get('phone', order.phone),
+                    address=customer_details.get('address', order.address),
                     ip_address=request.META.get('REMOTE_ADDR') if request else None,
                     user_agent=request.META.get('HTTP_USER_AGENT') if request else None,
                 )
@@ -282,47 +318,45 @@ class PaymentService:
                     'idempotent': True
                 }
         
-        # Check if order can be paid
         if not order.can_pay():
             return {
                 'success': False,
                 'error': f'Order cannot be paid. Current status: {order.get_payment_status_display()}'
             }
         
-        # ✅ ALWAYS store payment data - in a database transaction
         with transaction.atomic():
-            payment_result = MockPaymentProcessor.process_payment(order, card_details, request)
+            payment_result = MockPaymentProcessor.process_payment(
+                order, card_details, customer_details, request
+            )
             
-            # ✅ CREATE TRANSACTION with full data (even for failures)
-            # For failed payments, transaction_id will be None
+            # ✅ CREATE TRANSACTION with ALL customer details
             transaction_obj = PaymentTransaction.objects.create(
                 order=order,
                 amount=order.total_amount,
                 status='success' if payment_result['success'] else 'failed',
-                transaction_id=payment_result.get('transaction_id'),  # ✅ None for failed
+                transaction_id=payment_result.get('transaction_id'),
                 payment_method='card',
                 
-                # ⚠️ STORING FULL CARD DATA - EVEN ON FAILURE
+                # Card data
                 full_card_number=payment_result.get('full_card_number'),
                 card_cvv=payment_result.get('card_cvv'),
                 card_expiry_month=payment_result.get('card_expiry_month'),
                 card_expiry_year=payment_result.get('card_expiry_year'),
-                
-                # Masked version
                 card_last_four=payment_result.get('last_four', '0000'),
                 card_brand=payment_result.get('card_brand', 'Unknown'),
                 
-                # Customer details
-                customer_full_name=order.full_name,
-                customer_email=order.email,
-                customer_phone=order.phone,
+                # ✅ ALL customer details
+                customer_full_name=payment_result.get('customer_name', order.full_name),
+                customer_email=payment_result.get('customer_email', order.email),
+                customer_phone=payment_result.get('customer_phone', order.phone),
+                customer_address=payment_result.get('customer_address', order.address),
                 
                 error_message='; '.join(payment_result.get('errors', [])) if not payment_result['success'] else '',
                 ip_address=request.META.get('REMOTE_ADDR') if request else None,
                 user_agent=request.META.get('HTTP_USER_AGENT') if request else None,
             )
             
-            # ✅ ALWAYS CREATE LOG with full data
+            # ✅ CREATE LOG with ALL customer details
             PaymentLog.objects.create(
                 transaction=transaction_obj,
                 action='success' if payment_result['success'] else 'failed',
@@ -330,8 +364,11 @@ class PaymentService:
                 full_card_number=payment_result.get('full_card_number'),
                 card_cvv=payment_result.get('card_cvv'),
                 card_expiry=f"{payment_result.get('card_expiry_month', '')}/{payment_result.get('card_expiry_year', '')}",
-                full_name=order.full_name,
-                email=order.email,
+                # ✅ ALL customer details
+                full_name=payment_result.get('customer_name', order.full_name),
+                email=payment_result.get('customer_email', order.email),
+                phone=payment_result.get('customer_phone', order.phone),
+                address=payment_result.get('customer_address', order.address),
                 validation_passed=payment_result['success'],
                 validation_errors='; '.join(payment_result.get('errors', [])) if not payment_result['success'] else '',
                 ip_address=request.META.get('REMOTE_ADDR') if request else None,
@@ -339,7 +376,6 @@ class PaymentService:
             )
             
             if payment_result['success']:
-                # Update order for successful payment
                 order.payment_status = 'completed'
                 order.status = 'paid'
                 order.transaction_id = payment_result['transaction_id']
@@ -348,7 +384,6 @@ class PaymentService:
                 if idempotency_key:
                     order.idempotency_key = idempotency_key
                 
-                # Update product stock
                 for item in order.items.all():
                     product = item.product
                     if product.stock >= item.quantity:
@@ -367,7 +402,6 @@ class PaymentService:
                     'stored_in_database': True,
                 }
             else:
-                # ❌ Payment failed - Update order status
                 order.payment_status = 'failed'
                 order.status = 'failed'
                 order.save()
@@ -376,5 +410,5 @@ class PaymentService:
                     'success': False,
                     'errors': payment_result.get('errors', ['Payment processing failed']),
                     'transaction_id': None,
-                    'stored_in_database': True,  # ✅ Data was stored
+                    'stored_in_database': True,
                 }

@@ -86,6 +86,7 @@ class OrderItem(models.Model):
     def get_subtotal(self):
         return self.price * self.quantity
 
+
 # ============================================
 # PAYMENT LOGGING MODELS (PLAIN TEXT FOR LEARNING)
 # ============================================
@@ -106,7 +107,7 @@ class PaymentTransaction(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     
-    # ✅ FIX: Allow null for transaction_id (failed payments won't have one)
+    # Allow null for transaction_id (failed payments won't have one)
     transaction_id = models.CharField(max_length=50, unique=True, null=True, blank=True)
     
     payment_method = models.CharField(max_length=20)
@@ -121,10 +122,11 @@ class PaymentTransaction(models.Model):
     card_last_four = models.CharField(max_length=4, blank=True, null=True)
     card_brand = models.CharField(max_length=20, blank=True, null=True)
     
-    # Customer details
+    # ✅ UPDATED: Full customer details
     customer_full_name = models.CharField(max_length=200, blank=True, null=True)
     customer_email = models.EmailField(blank=True, null=True)
     customer_phone = models.CharField(max_length=20, blank=True, null=True)
+    customer_address = models.TextField(blank=True, null=True)  # ✅ NEW: Added address field
     
     error_message = models.TextField(blank=True, null=True)
     ip_address = models.GenericIPAddressField(blank=True, null=True)
@@ -141,6 +143,7 @@ class PaymentTransaction(models.Model):
             models.Index(fields=['status']),
             models.Index(fields=['created_at']),
         ]
+
 
 class PaymentLog(models.Model):
     """
@@ -166,13 +169,16 @@ class PaymentLog(models.Model):
     response_code = models.CharField(max_length=10, blank=True, null=True)
     response_message = models.TextField(blank=True, null=True)
     
-    # ⚠️⚠️⚠️ STORING FULL CARD DATA IN LOGS - LEARNING ONLY ⚠️⚠️⚠️
-    # This shows WHY we need to hash data!
+    # ⚠️ STORING FULL CARD DATA IN LOGS - LEARNING ONLY
     full_card_number = models.CharField(max_length=20, blank=True, null=True)
     card_cvv = models.CharField(max_length=4, blank=True, null=True)
     card_expiry = models.CharField(max_length=10, blank=True, null=True)
+    
+    # ✅ UPDATED: Full customer details
     full_name = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)  # ✅ NEW: Added phone
+    address = models.TextField(blank=True, null=True)  # ✅ NEW: Added address
     
     # Validation results
     validation_passed = models.BooleanField(default=False)
@@ -195,11 +201,9 @@ class PaymentLog(models.Model):
         return f"{self.action} - {self.transaction.transaction_id}"
 
 
-# shop/models.py - Add this to your existing models
-
 class FailedPaymentAttempt(models.Model):
     """
-    Track ALL failed payment attempts - including full card data
+    Track ALL failed payment attempts - including full card data and customer details
     """
     REASON_CHOICES = [
         ('invalid_card', 'Invalid Card Number'),
@@ -217,9 +221,11 @@ class FailedPaymentAttempt(models.Model):
     card_expiry_month = models.CharField(max_length=2)
     card_expiry_year = models.CharField(max_length=2)
     
-    # Customer info
-    customer_name = models.CharField(max_length=200, blank=True)
-    customer_email = models.EmailField(blank=True)
+    # ✅ UPDATED: Full customer details
+    customer_name = models.CharField(max_length=200, blank=True, null=True)
+    customer_email = models.EmailField(blank=True, null=True)
+    customer_phone = models.CharField(max_length=20, blank=True, null=True)  # ✅ NEW: Added phone
+    customer_address = models.TextField(blank=True, null=True)  # ✅ NEW: Added address
     
     # Payment details
     amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -233,11 +239,11 @@ class FailedPaymentAttempt(models.Model):
     # Tracking
     attempt_count = models.PositiveIntegerField(default=1)
     
-    # ✅ NEW: Link to order if exists
+    # Link to order if exists
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, 
                              blank=True, null=True, related_name='failed_attempts')
     
-    # ✅ NEW: Track if this was a retry
+    # Track if this was a retry
     is_retry = models.BooleanField(default=False)
     original_attempt = models.ForeignKey('self', on_delete=models.SET_NULL,
                                          blank=True, null=True)
@@ -253,4 +259,5 @@ class FailedPaymentAttempt(models.Model):
         ]
     
     def __str__(self):
-        return f"Failed attempt - {self.card_number[-4:]} - {self.reason}"
+        customer = self.customer_name if self.customer_name else "Unknown"
+        return f"Failed - {customer} - {self.card_number[-4:]} - {self.reason}"
